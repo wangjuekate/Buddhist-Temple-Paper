@@ -1,0 +1,151 @@
+#-*-coding: cp936-*-
+from scrapy.spider import BaseSpider
+
+from scrapy.selector import HtmlXPathSelector
+
+
+from urlparse import urljoin
+from scrapy.http import Request, FormRequest
+
+from scrapy.shell import inspect_response
+from scrapy.utils.response import open_in_browser
+
+from sglhzlib import htmltools
+
+from metacritic.items import MetacriticItem
+import re
+import sys
+
+class MccSpider(BaseSpider):
+    name = "mkc"
+   # allowed_domains = ["annhui"]
+    start_urls = ('http://www.dianping.com/shop/8056380',
+'http://www.dianping.com/shop/4169896',
+'http://www.dianping.com/shop/6318328',
+'http://www.dianping.com/shop/12639874',
+'http://www.dianping.com/shop/4125402/review_all#rev_56555920',
+'http://www.dianping.com/shop/1624267/review_more',
+'http://www.dianping.com/shop/2624719',
+'http://www.dianping.com/shop/2432146/review_more#start=10',
+'http://www.dianping.com/shop/1717006/review_all#rev_8483982',
+'http://www.dianping.com/shop/1788505',
+'http://www.dianping.com/shop/2982466/review_all#rev_24042329',
+'http://www.dianping.com/shop/1680340/review_more',
+'http://www.dianping.com/shop/15092275/review_all#rev_55744618',
+'http://www.dianping.com/shop/1624345/review_more',
+'http://www.dianping.com/shop/1596211/review_more',
+'http://www.dianping.com/shop/1926970/review_all#rev_56377825',
+'http://www.dianping.com/shop/4707884',
+'http://www.dianping.com/shop/3663856/review_more',
+'http://www.dianping.com/shop/4298778',
+'http://www.dianping.com/shop/10256814',
+'http://www.dianping.com/shop/2473711/review_all#rev_48918740',
+'http://www.dianping.com/shop/1743481/review_all#rev_57289461',
+'http://www.dianping.com/shop/14901058',
+'http://www.dianping.com/shop/6345055',
+'http://www.dianping.com/shop/6341031',
+'http://www.dianping.com/shop/5293195',)
+
+    def parse(self, response):
+        #hxs = HtmlXPathSelector(response)
+   #url = urljoin(response.url,'/review_all#rev_50097049')
+        #links = hxs.select('//div[@class="product_condensed"]/ol/li//a/@href').extract()
+        #hxs = HtmlXPathSelector(response)
+        #url=urljoin(response.url,'/review_all#rev_50097049')
+        url =response.url
+        r = Request(url, callback=self.parse_item)
+        yield r
+        
+    def parse_item(self, response):
+        #get general information
+        hxs= HtmlXPathSelector(response)
+        templename = ""
+        ss = hxs.select('//div[@class="info-name"]/h2/a/text()').extract()
+        if len(ss)>0:
+            templename = ss[0].strip()
+        if len(ss)==0:
+            ss = hxs.select('//div[@class="shop-name"]/h1/text()').extract()
+            if len(ss)>0:
+                templename = ss[0].strip()
+        
+        
+        starleveltotal = ""
+        ss = hxs.select('//div[@class="comment-rst"]/span/@class').extract()
+        if len(ss)>0:
+            starleveltotal= ss[0].strip()
+          
+        place = ""
+        source= hxs.select('//div[@class="info-list"]/li/em/text()').extract()
+        if len(source)>0:
+            place= source[0].strip()
+        
+        
+        price_average=""
+        ss=hxs.select('//div[@class="comment-rst"]/strong/text()').extract()
+        if len(ss)>0:
+            price_average=ss[0].strip().encode('GB18030')
+
+        
+
+        #for reviews
+        reviews=hxs.select('//div[@class="comment-list"]/ul/li')
+
+        if len(reviews)>0:
+            for review in reviews:
+                item = MetacriticItem()
+                type = sys.getfilesystemencoding()
+                item['Templename']=templename.decode('GB18030').encode(type)
+                item['Starlevel_total']=starleveltotal.decode('GB18030').encode(type)
+                item['Place']=place.decode('GB18030').encode(type)
+                item['Price_averge'] =price_average
+                item['review_id']=""
+                item['review_rating']=""
+                item['review_price']=""
+                item['review_content']=""
+                
+                #review id
+                review_id=""
+                ss = review.select('div[@class="pic"]/a/@user-id').extract()
+                review_id=ss[0].strip()
+
+
+                #review_rating
+                review_rating=""
+                ss = review.select('.//div[@class="user-info"]/span/@class').extract()
+                if len(ss)>0:
+                    review_rating=ss[0].strip()
+
+                #review_price
+                review_price=""
+                ss = review.select('.//div[@class="user-info"]/span[@class="comm-per"]/text()').extract()
+                if len(ss)>0:
+                    review_price=ss[0].strip()
+
+                #review_content
+                review_time=""
+                ss= review.select('.//div[@class="misc-info"]/span[@class="time"]/text()').extract()
+                if len(ss)>0:
+                    review_time=ss[0].strip()
+                    
+                review_content=""    
+                ss = review.select('.//div[@class="comment-txt"]/div/text()').extract()
+                if len(ss)>0:
+                    review_content=ss[0].strip().encode('GB18030')
+               
+                
+                
+                
+                item['review_id']=review_id.decode('GB18030').encode(type)
+                item['review_rating']=review_rating.decode('GB18030').encode(type)
+                item['review_price']=review_price.decode('GB18030').encode(type)
+                item['review_time']=review_time.encode('GB18030')
+                item['review_content']=review_content
+                yield  item
+        ss = hxs.select('//div[@class="Pages"]/a[@class="NextPage"]/@href').extract()
+        if len(ss)>0:
+            print '### Item have next page.'
+            url = urljoin(response.url, ss[0])
+            r = Request(url, callback=self.parse_item)
+            yield r
+
+
