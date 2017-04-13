@@ -1,0 +1,15 @@
+#Source and Code Criteria:
+1. We only need "晚报20强" and "都市报30强"
+2. Please order the newspapers by ranking (1, 2, 3,...) for each year, generate a list, and save as a file. The 2007 data is not complete (we only have 晚报20强). Please use that in 2008 to replace the missing data in 2007. Then code the location of each newspaper. Save as a file.
+3. For each TEMPLE, please count the number of "top 都市报30强" in the previous year in its location. Then count the number of both "晚报20强" and "都市报30强" for each temple in the previous year. So create two variables for each temple each year.Use the 2007 data for year 2006, 2007, and 2008. 2008 for 2009 etc.
+
+#Variables:
+
+#Dataset: Newspaper ranking
+Variable	Description
+NameNewspaper	报纸名称
+Ranks	报纸排名
+TypeNewspaper	报纸类型： W： 晚报，D： 都市报
+CityCode  所在城市ID
+
+#Dataset: TempleNewspaper
