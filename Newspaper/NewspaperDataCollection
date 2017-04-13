@@ -5,18 +5,21 @@
 
 #Variables:
 
-#Dataset: Newspaper-ranking
+#Dataset: Newspaper_ranking
 Variable	Description
 NameNewspaper	报纸名称
 Ranks	报纸排名
 TypeNewspaper	报纸类型： W： 晚报，D： 都市报
 CityCode  所在城市ID
+Year  年份
 
 #Dataset: TempleNewspaper
 Variable	Description
 Templecode	Temple ID
 Citycode	City ID
-Newspaper_p1	Number of Newspaper in last year
+Newspaper_p1	晚报+都市报
+NewspaperD_p1 都市报
+Year 年份
 
 #Implementing Codes:
 
